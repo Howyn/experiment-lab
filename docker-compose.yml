@@ -1,0 +1,12 @@
+services:
+  experiment-lab:
+    build: .
+    container_name: experiment-lab
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - ACCESS_PASSWORD=${ACCESS_PASSWORD}
+    volumes:
+      - ./data:/app/data

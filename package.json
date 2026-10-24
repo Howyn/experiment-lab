@@ -1,0 +1,7 @@
+{
+  "name": "experiment-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal experiment lab for tasks and observations",
+  "scripts": { "start": "node server.js" }
+}
