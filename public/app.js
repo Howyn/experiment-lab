@@ -52,5 +52,5 @@ window.labPage = nextPage => { page = nextPage; filters = { q: '', status: 'all'
 window.labNew = type => { editing = { type, title: '', status: type === 'task' ? 'todo' : 'active', records: [] }; render(); };
 window.labEdit = id => { editing = db.experiments.find(e => e.id === id); if (editing) render(); };
 function bindGlobalClicks() { app.onclick = event => { const target = event.target instanceof Element ? event.target : event.target.parentElement; if (!target) return; const pageButton = target.closest('[data-page]'); if (pageButton) { window.labPage(pageButton.dataset.page); return; } const newButton = target.closest('[data-new]'); if (newButton) { window.labNew(newButton.dataset.new); return; } const editButton = target.closest('[data-edit]'); if (editButton) window.labEdit(editButton.dataset.edit); }; }
-function render() { if (!auth) return login(); app.innerHTML = shell(); bindGlobalClicks(); bindShell(); bindEditor(); updateSyncLabel(); }
+function render() { if (!auth) return login(); app.innerHTML = shell(); bindGlobalClicks(); bindShell(); if (editing) app.insertAdjacentHTML('beforeend', form(editing)); bindEditor(); updateSyncLabel(); }
 (async () => { if (!auth) return render(); try { await load(); render(); startSync(); } catch { auth = ''; localStorage.removeItem('lab_token'); render(); } })();
