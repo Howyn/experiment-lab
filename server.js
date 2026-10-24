@@ -38,6 +38,12 @@ const server = http.createServer(async (req, res) => {
         const existing = new Map(db.experiments.map(e => [e.id, e])); incoming.experiments.forEach(e => { if (e.id) existing.set(e.id, { ...e, updatedAt: now() }); });
         db.experiments = [...existing.values()]; writeDb(db); return json(res, 200, { count: incoming.experiments.length });
       }
+      if (parsed.pathname === '/api/trash' && req.method === 'DELETE') {
+        const removed = db.experiments.filter(e => e.deletedAt).length;
+        db.experiments = db.experiments.filter(e => !e.deletedAt);
+        writeDb(db);
+        return json(res, 200, { removed });
+      }
       if (parsed.pathname === '/api/experiments' && req.method === 'GET') return json(res, 200, db);
       if (parsed.pathname === '/api/experiments' && req.method === 'POST') {
         const d = await body(req); const type = d.type === 'observation' ? 'observation' : 'task';
@@ -47,7 +53,14 @@ const server = http.createServer(async (req, res) => {
       }
       const match = parsed.pathname.match(/^\/api\/experiments\/([^/]+)$/);
       if (match) { const i = db.experiments.findIndex(e => e.id === match[1]); if (i < 0) return json(res, 404, { error: '实验不存在' });
-        if (req.method === 'DELETE') { db.experiments[i].deletedAt = now(); db.experiments[i].updatedAt = now(); writeDb(db); return json(res, 200, db.experiments[i]); }
+        if (req.method === 'DELETE') {
+          if (db.experiments[i].deletedAt) {
+            const [removed] = db.experiments.splice(i, 1);
+            writeDb(db);
+            return json(res, 200, { ...removed, permanentlyDeleted: true });
+          }
+          db.experiments[i].deletedAt = now(); db.experiments[i].updatedAt = now(); writeDb(db); return json(res, 200, db.experiments[i]);
+        }
         if (req.method === 'PUT') { const d = await body(req); const old = db.experiments[i]; const next = { ...old, ...d, id: old.id, type: old.type, updatedAt: now() }; if (next.status !== old.status) { if (next.status === 'active' && !next.startedAt) next.startedAt = now(); if (next.status === 'done' && !next.completedAt) next.completedAt = now(); } db.experiments[i] = next; writeDb(db); return json(res, 200, next); }
       }
       return json(res, 404, { error: '接口不存在' });
