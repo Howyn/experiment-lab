@@ -41,7 +41,8 @@ const server = http.createServer(async (req, res) => {
       if (parsed.pathname === '/api/experiments' && req.method === 'GET') return json(res, 200, db);
       if (parsed.pathname === '/api/experiments' && req.method === 'POST') {
         const d = await body(req); const type = d.type === 'observation' ? 'observation' : 'task';
-        const t = now(); const e = { id: id(), type, title: clean(d.title) || (type === 'task' ? '未命名任务实验' : '未命名观察实验'), status: type === 'task' ? 'todo' : 'active', result: '', createdAt: t, updatedAt: t, startedAt: '', completedAt: '', target: '', phenomenon: '', bug: '', adjustment: '', observationGoal: '', hypothesis: '', indicators: '', conclusion: '', records: [], deletedAt: '' };
+        const t = now(); const requestedStatus = type === 'task' && ['todo', 'active', 'done'].includes(d.status) ? d.status : type === 'observation' && ['active', 'ended'].includes(d.status) ? d.status : type === 'task' ? 'todo' : 'active';
+        const e = { id: id(), type, title: clean(d.title) || (type === 'task' ? '未命名任务实验' : '未命名观察实验'), status: requestedStatus, result: clean(d.result), createdAt: t, updatedAt: t, startedAt: requestedStatus === 'active' ? t : '', completedAt: requestedStatus === 'done' ? t : '', target: clean(d.target), phenomenon: clean(d.phenomenon), bug: clean(d.bug), adjustment: clean(d.adjustment), observationGoal: clean(d.observationGoal), hypothesis: clean(d.hypothesis), indicators: clean(d.indicators), conclusion: clean(d.conclusion), records: Array.isArray(d.records) ? d.records.map(r => ({ date: clean(r.date), text: clean(r.text) })).filter(r => r.date || r.text) : [], deletedAt: '' };
         db.experiments.unshift(e); writeDb(db); return json(res, 201, e);
       }
       const match = parsed.pathname.match(/^\/api\/experiments\/([^/]+)$/);
