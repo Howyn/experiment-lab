@@ -53,7 +53,7 @@ const server = http.createServer(async (req, res) => {
     }
     let file = decodeURIComponent(req.url.split('?')[0]); if (file === '/') file = '/index.html';
     const full = path.normalize(path.join(publicDir, file)); if (!full.startsWith(publicDir)) return res.writeHead(403).end();
-    fs.readFile(full, (err, data) => { if (err) return res.writeHead(404).end('Not found'); const ext = path.extname(full); const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' }; res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' }); res.end(data); });
+    fs.readFile(full, (err, data) => { if (err) return res.writeHead(404).end('Not found'); const ext = path.extname(full); const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' }; res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': 'no-store, no-cache, must-revalidate' }); res.end(data); });
   } catch (e) { json(res, 500, { error: e.message }); }
 });
 server.listen(PORT, () => console.log(`Experiment Lab listening on http://0.0.0.0:${PORT}`));
